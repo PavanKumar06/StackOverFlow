@@ -1,4 +1,5 @@
 const TagsModel = require("../models/tags");
+const rateLimit = require("express-rate-limit");
 
 class TagsController {
   constructor(app) {
@@ -6,6 +7,8 @@ class TagsController {
 
     this.findTags = this.findTags.bind(this);
     this.createTag = this.createTag.bind(this);
+
+    this.rateLimitMiddleware();
 
     this.setupRoutes();
   }
@@ -42,11 +45,19 @@ class TagsController {
     res.json(tag);
   }
 
+  rateLimitMiddleware() {
+    return rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 1000,
+      message: "Too many requests from this IP, please try again later.",
+    });
+  }
+
   setupRoutes() {
-    this.app.get("/api/tags", this.findTags);
-    this.app.post("/api/tags", this.createTag);
-    this.app.put("/api/tags/name/:tid", this.updateName);
-    this.app.delete("/api/tags/:tid", this.deleteTag);
+    this.app.get("/api/tags", this.rateLimitMiddleware(), this.findTags);
+    this.app.post("/api/tags", this.rateLimitMiddleware(), this.createTag);
+    this.app.put("/api/tags/name/:tid", this.rateLimitMiddleware(), this.updateName);
+    this.app.delete("/api/tags/:tid", this.rateLimitMiddleware(), this.deleteTag);
   }
 }
 

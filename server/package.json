@@ -12,6 +12,7 @@
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "express": "*",
+    "express-rate-limit": "^7.1.5",
     "mongoose": "*",
     "mysql": "*",
     "nodemon": "^3.0.2",
