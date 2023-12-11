@@ -1,4 +1,5 @@
 const AnswersModel = require("../models/answers");
+const rateLimit = require("express-rate-limit");
 
 class AnswersController {
   constructor(app) {
@@ -6,6 +7,8 @@ class AnswersController {
 
     this.getAnswers = this.getAnswers.bind(this);
     this.createAnswer = this.createAnswer.bind(this);
+
+    this.rateLimitMiddleware();
 
     this.setupRoutes();
   }
@@ -84,15 +87,23 @@ class AnswersController {
     res.json(answer);
   }
 
+  rateLimitMiddleware() {
+    return rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 1000,
+      message: "Too many requests from this IP, please try again later.",
+    });
+  }
+
   setupRoutes() {
-    this.app.get("/api/answers", this.getAnswers);
-    this.app.post("/api/answers", this.createAnswer);
-    this.app.put("/api/answers/comments/:aid", this.updateComments);
-    this.app.put("/api/answers/text/:aid", this.updateText);
-    this.app.delete("/api/answers/:aid", this.deleteAns);
-    this.app.put("/api/answers/votes/:aid", this.updateVotesOnServer);
-    this.app.put("/api/answers/upvotedby/:aid", this.upvotedBy);
-    this.app.put("/api/answers/downvotedby/:aid", this.downvotedBy);
+    this.app.get("/api/answers", this.rateLimitMiddleware(), this.getAnswers);
+    this.app.post("/api/answers", this.rateLimitMiddleware(), this.createAnswer);
+    this.app.put("/api/answers/comments/:aid", this.rateLimitMiddleware(), this.updateComments);
+    this.app.put("/api/answers/text/:aid", this.rateLimitMiddleware(), this.updateText);
+    this.app.delete("/api/answers/:aid", this.rateLimitMiddleware(), this.deleteAns);
+    this.app.put("/api/answers/votes/:aid", this.rateLimitMiddleware(), this.updateVotesOnServer);
+    this.app.put("/api/answers/upvotedby/:aid", this.rateLimitMiddleware(), this.upvotedBy);
+    this.app.put("/api/answers/downvotedby/:aid", this.rateLimitMiddleware(), this.downvotedBy);
   }
 }
 

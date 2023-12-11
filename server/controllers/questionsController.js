@@ -1,4 +1,5 @@
 const QuestionsModel = require("../models/questions");
+const rateLimit = require("express-rate-limit");
 
 class QuestionsController {
   constructor(app) {
@@ -8,6 +9,8 @@ class QuestionsController {
     this.createQuestion = this.createQuestion.bind(this);
     this.updateQuestion = this.updateQuestion.bind(this);
     this.updateQuestionAnswer = this.updateQuestionAnswer.bind(this);
+
+    this.rateLimitMiddleware()
 
     this.setupRoutes();
   }
@@ -139,22 +142,28 @@ class QuestionsController {
     }
   }
 
-
+  rateLimitMiddleware() {
+    return rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 1000,
+      message: "Too many requests from this IP, please try again later.",
+    });
+  }
 
   setupRoutes() {
-    this.app.get("/api/questions", this.findQuestions);
-    this.app.post("/api/askQuestion", this.createQuestion);
-    this.app.put("/api/questions/:qid", this.updateQuestion);
-    this.app.put("/api/questions/answer/:qid", this.updateQuestionAnswer);
-    this.app.put("/api/questions/votes/:qid", this.updateVotesOnServer);
-    this.app.put("/api/questions/upvotedby/:qid", this.upvotedBy);
-    this.app.put("/api/questions/downvotedby/:qid", this.downvotedBy);
-    this.app.put("/api/questions/pinnedanswer/:qid", this.pinnedAnswer);
-    this.app.put("/api/questions/comments/:qid", this.updateComments);
-    this.app.put("/api/questions/titletext/:qid", this.updateQuestionTitleText);
-    this.app.delete("/api/questions/:qid", this.deleteQues);
-    this.app.put("/api/questions/lastAskDate", this.updateLastAskDate);
-    this.app.put("/api/questions/answers/:qid", this.updateAnswers);
+    this.app.get("/api/questions", this.rateLimitMiddleware(), this.findQuestions);
+    this.app.post("/api/askQuestion", this.rateLimitMiddleware(), this.createQuestion);
+    this.app.put("/api/questions/:qid", this.rateLimitMiddleware(), this.updateQuestion);
+    this.app.put("/api/questions/answer/:qid", this.rateLimitMiddleware(), this.updateQuestionAnswer);
+    this.app.put("/api/questions/votes/:qid", this.rateLimitMiddleware(), this.updateVotesOnServer);
+    this.app.put("/api/questions/upvotedby/:qid", this.rateLimitMiddleware(), this.upvotedBy);
+    this.app.put("/api/questions/downvotedby/:qid", this.rateLimitMiddleware(), this.downvotedBy);
+    this.app.put("/api/questions/pinnedanswer/:qid", this.rateLimitMiddleware(), this.pinnedAnswer);
+    this.app.put("/api/questions/comments/:qid", this.rateLimitMiddleware(), this.updateComments);
+    this.app.put("/api/questions/titletext/:qid", this.rateLimitMiddleware(), this.updateQuestionTitleText);
+    this.app.delete("/api/questions/:qid", this.rateLimitMiddleware(), this.deleteQues);
+    this.app.put("/api/questions/lastAskDate", this.rateLimitMiddleware(), this.updateLastAskDate);
+    this.app.put("/api/questions/answers/:qid", this.rateLimitMiddleware(), this.updateAnswers);
   }
 }
 

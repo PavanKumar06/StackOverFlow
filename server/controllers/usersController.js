@@ -1,4 +1,5 @@
 const UsersModel = require("../models/users")
+const rateLimit = require("express-rate-limit");
 
 class UsersController {
     constructor(app) {
@@ -6,6 +7,8 @@ class UsersController {
 
         this.signup = this.signup.bind(this);
         this.login = this.login.bind(this);
+
+        this.rateLimitMiddleware();
 
         this.setupRoutes();
     }
@@ -31,11 +34,11 @@ class UsersController {
     }
 
     async reputation(req, res) {
-        const {reputation, username} = req.body;
+        const {reputation} = req.body;
 
         try {
             const user = UsersModel.updateOne(
-                { username: username },
+                { username: req.params.username },
                 { $set: {reputation: reputation} }
             );
             res.json(user);
@@ -44,10 +47,18 @@ class UsersController {
         }
     }
 
+    rateLimitMiddleware() {
+        return rateLimit({
+          windowMs: 15 * 60 * 1000,
+          max: 1000,
+          message: "Too many requests from this IP, please try again later.",
+        });
+      }
+
     setupRoutes() {
-        this.app.post("/api/signup", this.signup);
-        this.app.post("/api/login", this.login);
-        this.app.put("/api/users/reputation", this.reputation);
+        this.app.post("/api/signup", this.rateLimitMiddleware(), this.signup);
+        this.app.post("/api/login", this.rateLimitMiddleware(), this.login);
+        this.app.put("/api/users/reputation/:username", this.rateLimitMiddleware(), this.reputation);
     }
 }
 

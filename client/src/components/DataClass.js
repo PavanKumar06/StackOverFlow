@@ -583,8 +583,8 @@ class DataClass {
     }
 
     async updateReputation(username, reputation) {
-        const url = `http://localhost:8000/api/users/reputation`;
-        const data = {reputation: reputation, username: username};
+        const url = `http://localhost:8000/api/users/reputation/${username}`;
+        const data = {reputation: reputation};
 
         try {
             const response = await axios.put(url, data)

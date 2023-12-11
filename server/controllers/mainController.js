@@ -2,12 +2,15 @@ const AnswersModel = require("../models/answers");
 const QuestionsModel = require("../models/questions");
 const TagsModel = require("../models/tags");
 const CommentsModel = require("../models/comments");
+const rateLimit = require("express-rate-limit");
 
 class MainController {
   constructor(app) {
     this.app = app;
 
     this.getAllData = this.getAllData.bind(this);
+
+    this.rateLimitMiddleware();
 
     this.setupRoutes();
   }
@@ -66,8 +69,16 @@ class MainController {
     }
   }
 
+  rateLimitMiddleware() {
+    return rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 1000,
+      message: "Too many requests from this IP, please try again later.",
+    });
+  }
+
   setupRoutes() {
-    this.app.get("/api/getAllData", this.getAllData);
+    this.app.get("/api/getAllData", this.rateLimitMiddleware(), this.getAllData);
   }
 }
 
